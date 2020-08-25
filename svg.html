@@ -1,254 +1,331 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <body>
   <h1 style="text-align: center;">SVG</h1>
   <h2 style="text-align: center;">Click ball</h2>
-<script>
-
-  var Vec = class Vec {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-    }
-    plus(other) {
-      return new Vec(this.x + other.x, this.y + other.y);
-    }
-    times(factor) {
-      return new Vec(this.x * factor, this.y * factor);
-    }
-  }
-
-  var State = class State {
-    constructor(balls, screen) {
-      this.balls = balls;
-      this.screen = screen;
-    }
-
-    static start(screen) {
-      const balls = Ball.create(screen);
-      return new State([balls], screen);
-    }
-  }
-
-  State.prototype.update = function(time, createNewBallTime) {
-      
-    if (createNewBallTime < 0) {
-      const ball = Ball.create(this.screen);
-      if (!this.touchesBall(ball)) {
-        this.balls.push(ball)
-      };
-    }
-
-    const balls = this.balls
-      .map(ball => ball.update(time, this))
-      .filter((ball) => ball);
-
-    return new State(balls, this.screen);
-  };
-
-  State.prototype.touches = function(pos, size) {
-    if (pos.x <= 0 + size || pos.x >= this.screen.width - size) return 1;
-    if (pos.y <= 0 + size || pos.y >= this.screen.height - size) return -1;
-
-    return false;
-  };
-
-  State.prototype.touchesBall = function (args) {
-    let { newPos = "", pos, speed, size } = args;
-    if (!newPos) newPos = pos;
-
-    for (let ball of this.balls) {
-      if (ball.pos === pos) continue;
-
-      const cathetusY = newPos.y - ball.pos.y;
-      const cathetusX = newPos.x - ball.pos.x;
-      const hypotenuse = Math.sqrt(cathetusX * cathetusX + cathetusY * cathetusY);
-      if (hypotenuse <= size + ball.size) {
-        if (args instanceof Ball) return true;
-
-        let touchesAngleDown = Math.atan2(cathetusY, cathetusX);
-        let touchesAngleOut = Math.atan2(cathetusY * (-1), cathetusX * (-1));
-        let speedAngle = Math.atan2(speed.y, speed.x);
-      
-        const newSpeedAngle = touchesAngleOut + (-speedAngle) + touchesAngleDown;
-        const newSpeed =  new Vec(Math.cos(newSpeedAngle) * 100, Math.sin(newSpeedAngle) * 100);
-        return newSpeed;
+  <script>
+    var Vec = class Vec {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
       }
-    }
-    return false;
-  }
-
-  var Ball = class Ball {
-    constructor(pos, speed, size, color, touchesBall, touchesDate) {
-      this.pos = pos;
-      this.speed = speed;
-      this.size = size;
-      this.color = color;
-      this.touchesBall = touchesBall;
-      this.touchesDate = touchesDate;
-    }
-
-    static create(screen) {
-      const min = 20;
-      const max = 100;
-      const size = Math.random() * (max - min) + min;
-      const x = Math.random() * (screen.width - 2 * size) + size;
-      const y = Math.random() * (screen.height - 2 * size) + size;
-      const speedX = Math.random() * 200 - 100;
-      const speedY = Math.random() * 200 - 100;
-      let color = '';
-      for (let i = 0; i < 3; i++) {
-        let hex = Math.floor(Math.random() * 256).toString(16);
-        color += ('0' + hex).slice(-2);
+      plus(other) {
+        return new Vec(this.x + other.x, this.y + other.y);
       }
-      return new Ball(new Vec(x, y), new Vec(speedX, speedY), size, `#${color}`, false, new Date().getTime());
-    }
-  }
+      times(factor) {
+        return new Vec(this.x * factor, this.y * factor);
+      }
+    };
 
-  Ball.prototype.update = function(time, state) {
-    let newPos = this.pos.plus(this.speed.times(time));
-    
-    let newSpeed = state.touchesBall({newPos, pos: this.pos, speed: this.speed, size: this.size });
+    var State = class State {
+      constructor(balls, screen) {
+        this.balls = balls;
+        this.screen = screen;
+      }
 
-    if (!this.touchesBall) {
+      static start(screen) {
+        const balls = Ball.create(screen);
+        return new State([balls], screen);
+      }
+    };
+
+    State.prototype.update = function (time, createNewBallTime) {
+      if (createNewBallTime < 0) {
+        const ball = Ball.create(this.screen);
+        if (!this.touchesBall(ball)) {
+          this.balls.push(ball);
+        }
+      }
+
+      const balls = this.balls
+        .map((ball) => ball.update(time, this))
+        .filter((ball) => ball);
+
+      return new State(balls, this.screen);
+    };
+
+    State.prototype.touches = function (pos, size) {
+      if (pos.x <= 0 + size || pos.x >= this.screen.width - size) return 1;
+      if (pos.y <= 0 + size || pos.y >= this.screen.height - size) return -1;
+
+      return false;
+    };
+
+    State.prototype.touchesBall = function (args) {
+      let { newPos = "", pos, speed, size } = args;
+      if (!newPos) newPos = pos;
+
+      for (let ball of this.balls) {
+        if (ball.pos === pos) continue;
+
+        const cathetusY = newPos.y - ball.pos.y;
+        const cathetusX = newPos.x - ball.pos.x;
+        const hypotenuse = Math.sqrt(
+          cathetusX * cathetusX + cathetusY * cathetusY
+        );
+        if (hypotenuse <= size + ball.size) {
+          if (args instanceof Ball) return true;
+
+          let touchesAngleDown = Math.atan2(cathetusY, cathetusX);
+          let touchesAngleOut = Math.atan2(cathetusY * -1, cathetusX * -1);
+          let speedAngle = Math.atan2(speed.y, speed.x);
+
+          const newSpeedAngle =
+            touchesAngleOut + -speedAngle + touchesAngleDown;
+          const newSpeed = new Vec(
+            Math.cos(newSpeedAngle) * 100,
+            Math.sin(newSpeedAngle) * 100
+          );
+          return newSpeed;
+        }
+      }
+      return false;
+    };
+
+    var Ball = class Ball {
+      constructor(pos, speed, size, color, touchesBall, touchesDate) {
+        this.pos = pos;
+        this.speed = speed;
+        this.size = size;
+        this.color = color;
+        this.touchesBall = touchesBall;
+        this.touchesDate = touchesDate;
+      }
+
+      static create(screen) {
+        const min = 20;
+        const max = 100;
+        const size = Math.random() * (max - min) + min;
+        const x = Math.random() * (screen.width - 2 * size) + size;
+        const y = Math.random() * (screen.height - 2 * size) + size;
+        const speedX = Math.random() * 200 - 100;
+        const speedY = Math.random() * 200 - 100;
+        let color = "";
+        for (let i = 0; i < 3; i++) {
+          let hex = Math.floor(Math.random() * 256).toString(16);
+          color += ("0" + hex).slice(-2);
+        }
+        return new Ball(
+          new Vec(x, y),
+          new Vec(speedX, speedY),
+          size,
+          `#${color}`,
+          false,
+          new Date().getTime()
+        );
+      }
+    };
+
+    Ball.prototype.update = function (time, state) {
+      let newPos = this.pos.plus(this.speed.times(time));
+
+      let newSpeed = state.touchesBall({
+        newPos,
+        pos: this.pos,
+        speed: this.speed,
+        size: this.size,
+      });
+
+      if (!this.touchesBall) {
+        if (newSpeed) {
+          return new Ball(
+            this.pos,
+            newSpeed,
+            this.size,
+            this.color,
+            true,
+            this.touchesDate
+          );
+        }
+      }
+
       if (newSpeed) {
-        return new Ball(this.pos, newSpeed, this.size, this.color, true, this.touchesDate);
+        const nowDate = new Date().getTime();
+        if (nowDate - this.touchesDate < time * 1000) {
+          return false;
+        }
+        return new Ball(
+          this.pos,
+          this.speed,
+          this.size,
+          this.color,
+          true,
+          new Date().getTime()
+        );
       }
-    }
 
-    if (newSpeed) {
-      const nowDate = new Date().getTime();
-      if ((nowDate - this.touchesDate) < (time * 1000)) {
-        return false;
+      const turn = state.touches(newPos, this.size);
+
+      if (!turn) {
+        return new Ball(
+          newPos,
+          this.speed,
+          this.size,
+          this.color,
+          false,
+          this.touchesDate
+        );
       }
-      return new Ball(this.pos, this.speed, this.size, this.color, true, new Date().getTime());
-    }
-      
-    const turn = state.touches(newPos, this.size);
+      if (turn > 0) {
+        newSpeed = new Vec(this.speed.x * -1, this.speed.y);
+        newPos = this.pos.plus(newSpeed.times(time));
+        return new Ball(
+          newPos,
+          newSpeed,
+          this.size,
+          this.color,
+          false,
+          this.touchesDate
+        );
+      } else {
+        newSpeed = new Vec(this.speed.x, this.speed.y * -1);
+        newPos = this.pos.plus(newSpeed.times(time));
+        return new Ball(
+          newPos,
+          newSpeed,
+          this.size,
+          this.color,
+          false,
+          this.touchesDate
+        );
+      }
+    };
 
-    if (!turn) {
-      return new Ball(newPos, this.speed, this.size, this.color, false, this.touchesDate);
-    }
-    if (turn > 0) {
-      newSpeed = new Vec(this.speed.x * -1, this.speed.y);
-      newPos = this.pos.plus(newSpeed.times(time));
-      return new Ball(newPos, newSpeed, this.size, this.color, false, this.touchesDate);
-    } else {
-      newSpeed = new Vec(this.speed.x, this.speed.y * -1);
-      newPos = this.pos.plus(newSpeed.times(time));
-      return new Ball(newPos, newSpeed, this.size, this.color, false, this.touchesDate);
-    }
-      
-  };
+    var DomDisplay = class DomDisplay {
+      constructor() {
+        this.svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg"
+        );
+        this.width = document.documentElement.clientWidth - 32;
+        this.height = document.documentElement.clientHeight - 32;
+        this.svg.setAttributeNS(null, "width", `${this.width}`);
+        this.svg.setAttributeNS(null, "height", `${this.height}`);
+        this.svg.setAttributeNS(
+          null,
+          "viewBox",
+          `0 0 ${this.width} ${this.height}`
+        );
+        this.svg.setAttributeNS(null, "version", "1.1");
+        this.svg.setAttributeNS(null, "style", "border: 2px solid blue");
+        document.body.appendChild(this.svg);
+        this.colorForDelete = false;
+      }
+    };
 
-  var DomDisplay = class DomDisplay {
-    constructor() {
-      this.svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
-      this.width = document.documentElement.clientWidth - 32;
-      this.height = document.documentElement.clientHeight - 32;
-      this.svg.setAttributeNS(null, "width", `${this.width}`);
-      this.svg.setAttributeNS(null, "height", `${this.height}`);
-      this.svg.setAttributeNS(null, "viewBox", `0 0 ${this.width} ${this.height}`);
-      this.svg.setAttributeNS(null, "version", "1.1");
-      this.svg.setAttributeNS(null, "style", "border: 2px solid blue");
-      document.body.appendChild(this.svg);
-      this.colorForDelete = false;
-    }
-  }
-  
-  DomDisplay.prototype.syncState = function(state) {
-
-    if (this.colorForDelete) {
-      for (let ball of state.balls) {
-        if ((this.colorForDelete == ball.color)) {
-          let ind = state.balls.indexOf(ball);
-          state.balls.splice(ind, 1);
-          this.colorForDelete = false;
+    DomDisplay.prototype.syncState = function (state) {
+      if (this.colorForDelete) {
+        for (let ball of state.balls) {
+          if (this.colorForDelete == ball.color) {
+            let ind = state.balls.indexOf(ball);
+            state.balls.splice(ind, 1);
+            this.colorForDelete = false;
+          }
         }
       }
-    }
 
-    for (let i = 0; i < this.svg.children.length; i++) {
-      let point = false;
-      for (let ball of state.balls) {
-        if ((this.svg.children[i].getAttributeNS(null, "fill") === ball.color) && (this.svg.children[i].getAttributeNS(null, "r") == ball.size)) {
-          this.svg.children[i].setAttributeNS(null, "cx", `${ball.pos.x}`);
-          this.svg.children[i].setAttributeNS(null, "cy", `${ball.pos.y}`);
-          point = true;
+      for (let i = 0; i < this.svg.children.length; i++) {
+        let point = false;
+        for (let ball of state.balls) {
+          if (
+            this.svg.children[i].getAttributeNS(null, "fill") === ball.color &&
+            this.svg.children[i].getAttributeNS(null, "r") == ball.size
+          ) {
+            this.svg.children[i].setAttributeNS(null, "cx", `${ball.pos.x}`);
+            this.svg.children[i].setAttributeNS(null, "cy", `${ball.pos.y}`);
+            point = true;
+          }
         }
+        if (!point) this.svg.children[i].remove();
       }
-      if (!point) this.svg.children[i].remove();
-    }
 
-    if (this.svg.children.length < state.balls.length) {
-      let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-      circle.setAttributeNS(null, "cx", `${state.balls[this.svg.children.length].pos.x}`);
-      circle.setAttributeNS(null, "cy", `${state.balls[this.svg.children.length].pos.y}`);
-      circle.setAttributeNS(null, "r", `${state.balls[this.svg.children.length].size}`);
-      circle.setAttributeNS(null, "fill", `${state.balls[this.svg.children.length].color}`);
-      circle.addEventListener('click', (evt) => { this.colorForDelete = evt.target.attributes[3].value });
-      this.svg.appendChild(circle);
-    }
-
-  };
-
-  var CanvasDisplay = class CanvasDisplay {
-    constructor() {
-      this.screen = document.createElement("canvas");
-      this.width = document.documentElement.clientWidth - 12;
-      this.height = document.documentElement.clientHeight - 12;
-      this.screen.width = this.width;
-      this.screen.height = this.height;
-      document.body.appendChild(this.screen);
-      this.cx = this.screen.getContext("2d");
-
-      let h1 = document.createElement("h1");
-      h1.textContent = "Canvas";
-      let canvas = document.querySelector("canvas");
-      h1.style.textAlign = "center";
-      document.body.insertBefore(h1, canvas);
-    }
-  }
-
-  CanvasDisplay.prototype.syncState = function(state) {
-    this.cx.clearRect(0, 0, this.width, this.height);
-    this.cx.strokeStyle = "blue";
-    this.cx.lineWidth = 4;
-    this.cx.strokeRect(0, 0, this.width, this.height);
-    for (let ball of state.balls) {
-      this.cx.fillStyle = ball.color;
-      this.cx.beginPath();
-      this.cx.arc(ball.pos.x, ball.pos.y, ball.size, 0, 7);
-      this.cx.fill();
-    }
-    
-  };
-
-  function runAnimation(updateAnimation) {
-    let lastTime = null;
-    function frame(time) {
-      if (lastTime != null) {
-        updateAnimation(Math.min(100, time - lastTime) / 1000);
+      if (this.svg.children.length < state.balls.length) {
+        let circle = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+        circle.setAttributeNS(
+          null,
+          "cx",
+          `${state.balls[this.svg.children.length].pos.x}`
+        );
+        circle.setAttributeNS(
+          null,
+          "cy",
+          `${state.balls[this.svg.children.length].pos.y}`
+        );
+        circle.setAttributeNS(
+          null,
+          "r",
+          `${state.balls[this.svg.children.length].size}`
+        );
+        circle.setAttributeNS(
+          null,
+          "fill",
+          `${state.balls[this.svg.children.length].color}`
+        );
+        circle.addEventListener("click", (evt) => {
+          this.colorForDelete = evt.target.attributes[3].value;
+        });
+        this.svg.appendChild(circle);
       }
-      lastTime = time;
+    };
+
+    var CanvasDisplay = class CanvasDisplay {
+      constructor() {
+        this.screen = document.createElement("canvas");
+        this.width = document.documentElement.clientWidth - 12;
+        this.height = document.documentElement.clientHeight - 12;
+        this.screen.width = this.width;
+        this.screen.height = this.height;
+        document.body.appendChild(this.screen);
+        this.cx = this.screen.getContext("2d");
+
+        let h1 = document.createElement("h1");
+        h1.textContent = "Canvas";
+        let canvas = document.querySelector("canvas");
+        h1.style.textAlign = "center";
+        document.body.insertBefore(h1, canvas);
+      }
+    };
+
+    CanvasDisplay.prototype.syncState = function (state) {
+      this.cx.clearRect(0, 0, this.width, this.height);
+      this.cx.strokeStyle = "blue";
+      this.cx.lineWidth = 4;
+      this.cx.strokeRect(0, 0, this.width, this.height);
+      for (let ball of state.balls) {
+        this.cx.fillStyle = ball.color;
+        this.cx.beginPath();
+        this.cx.arc(ball.pos.x, ball.pos.y, ball.size, 0, 7);
+        this.cx.fill();
+      }
+    };
+
+    function runAnimation(updateAnimation) {
+      let lastTime = null;
+      function frame(time) {
+        if (lastTime != null) {
+          updateAnimation(Math.min(100, time - lastTime) / 1000);
+        }
+        lastTime = time;
+        requestAnimationFrame(frame);
+      }
       requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
-  }
 
-  function runPlay(Display, timeCreate) {
-    let createNewBallTime = timeCreate;
-    let display = new Display();
-    let state = State.start({ width: display.width, height: display.height });
-    runAnimation(time => {
-      createNewBallTime -= time;
-      state = state.update(time, createNewBallTime);
-      display.syncState(state);
-      if (createNewBallTime < 0) createNewBallTime = timeCreate;
-    });
-  }
-  runPlay(DomDisplay, .2);
-  runPlay(CanvasDisplay, .2);
-
-</script>
+    function runPlay(Display, timeCreate) {
+      let createNewBallTime = timeCreate;
+      let display = new Display();
+      let state = State.start({ width: display.width, height: display.height });
+      runAnimation((time) => {
+        createNewBallTime -= time;
+        state = state.update(time, createNewBallTime);
+        display.syncState(state);
+        if (createNewBallTime < 0) createNewBallTime = timeCreate;
+      });
+    }
+    runPlay(DomDisplay, 0.2);
+    runPlay(CanvasDisplay, 0.2);
+  </script>
 </body>
